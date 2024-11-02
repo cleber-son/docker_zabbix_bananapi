@@ -1,0 +1,84 @@
+version: '3.8'
+
+services:
+  zabbix-web:
+    image: zabbix/zabbix-web-nginx-mysql:7.0-ubuntu-latest
+    container_name: zabbix-web
+    ports:
+      - "80:8080"
+      - "8443:8443"
+    environment:
+      - ZBX_SERVER_NAME=${ZBX_SERVER_NAME}
+      - ZBX_SERVER_HOST=${ZBX_SERVER_HOST}
+      - ZBX_SERVER_PORT=${ZBX_SERVER_PORT}
+      - DB_SERVER_HOST=${DB_SERVER_HOST}
+      - DB_SERVER_PORT=${DB_SERVER_PORT}
+      - MYSQL_USER=${MYSQL_USER}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+      - MYSQL_DATABASE=${MYSQL_DATABASE}
+    volumes:
+      - ./data/zabbix-web:/var/lib/zabbix
+    depends_on:
+      - mysql-server
+    restart: always
+    networks:
+      - network-zabbix
+
+  zabbix-server:
+    image: zabbix-server-curl
+    container_name: zabbix-server
+    extra_hosts:
+      - "orangepi3-lts:172.18.0.1"
+    ports:
+      - "10051:10051"
+    volumes:
+    - ./data/zabbix-server/alertscripts:/usr/lib/zabbix/alertscripts
+    - ./data/zabbix-server/externalscripts:/usr/lib/zabbix/externalscripts
+    - ./data/zabbix-server/ssh_keys:/var/lib/zabbix/ssh_keys
+    environment:
+      - ZBX_SERVER_NAME=${ZBX_SERVER_NAME}
+      - ZBX_SERVER_HOST=${ZBX_SERVER_HOST}
+      - ZBX_SERVER_PORT=${ZBX_SERVER_PORT}
+      - DB_SERVER_HOST=${DB_SERVER_HOST}
+      - DB_SERVER_PORT=${DB_SERVER_PORT}
+      - MYSQL_USER=${MYSQL_USER}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+      - MYSQL_DATABASE=${MYSQL_DATABASE}
+      - ZBX_LISTENPORT=10051
+      - ZBX_LISTENIP=0.0.0.0
+    depends_on:
+      - mysql-server
+    restart: always
+    networks:
+      - network-zabbix
+
+
+  mysql-server:
+    image: mariadb:11.4
+    container_name: mysql-server
+    ports:
+      - "3306:3306"
+    environment:
+      - ZBX_SERVER_NAME=${ZBX_SERVER_NAME}
+      - ZBX_SERVER_HOST=${ZBX_SERVER_HOST}
+      - ZBX_SERVER_PORT=${ZBX_SERVER_PORT}
+      - DB_SERVER_HOST=${DB_SERVER_HOST}
+      - DB_SERVER_PORT=${DB_SERVER_PORT}
+      - MYSQL_USER=${MYSQL_USER}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+      - MYSQL_DATABASE=${MYSQL_DATABASE}
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+    volumes:
+      - ./data/mysql-server:/var/lib/mysql
+    restart: always
+    networks:
+      - network-zabbix
+
+volumes:
+  zabbix-web:
+  zabbix-server:
+  mysql-server:
+
+networks:
+  network-zabbix:
+    driver: bridge
