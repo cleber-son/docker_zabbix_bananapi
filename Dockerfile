@@ -1,3 +1,10 @@
+######################################################################
+# name: Dockerfile
+# author: Cleberson Souza - cleberson.brasil@gmail.com
+# version: 0.1
+# date: 11/nov/24
+######################################################################
+
 # Dockerfile
 FROM zabbix/zabbix-server-mysql:7.0-ubuntu-latest
 
